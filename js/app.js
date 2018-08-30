@@ -8,26 +8,26 @@
 
 // The names and URLs to all of the feeds we'd like available.
 var allFeeds = [
-    {
-        name: 'Udacity Blog',
-        url: 'http://blog.udacity.com/feed'
-    }, {
-        name: 'CSS Tricks',
-        url: 'http://feeds.feedburner.com/CssTricks'
-    }, {
-        name: 'HTML5 Rocks',
-        url: 'http://feeds.feedburner.com/html5rocks'
-    }, {
-        name: 'Linear Digressions',
-        url: 'http://feeds.feedburner.com/udacity-linear-digressions'
-    }
+{
+    name: 'Udacity Blog',
+    url: 'http://blog.udacity.com/feed'
+}, {
+    name: 'CSS Tricks',
+    url: 'http://feeds.feedburner.com/CssTricks'
+}, {
+    name: 'HTML5 Rocks',
+    url: 'http://feeds.feedburner.com/html5rocks'
+}, {
+    name: 'Linear Digressions',
+    url: 'http://feeds.feedburner.com/udacity-linear-digressions'
+}
 ];
 
 /* This function starts up our application. The Google Feed
  * Reader API is loaded asynchonously and will then call this
  * function when the API is loaded.
  */
-function init() {
+ function init() {
     // Load the first feed we've defined (index of 0).
     loadFeed(0);
 }
@@ -41,21 +41,45 @@ function init() {
  * which will be called after everything has run successfully.
  */
  function loadFeed(id, cb) {
-     var feedUrl = allFeeds[id].url,
-         feedName = allFeeds[id].name;
+    //变量id不可越界或者未定义
+    if(id==undefined||id>=allFeeds.length||id<0 ||id==null||(typeof id)!='number' )
+    {
+       throw new Error('变量id不可越界、未定义、空、或者非数字');
+   }   
+   var feedUrl = allFeeds[id].url,
+   feedName = allFeeds[id].name;
 
-     $.ajax({
+   $.ajax({
        type: "POST",
        url: 'https://rsstojson.udacity.com/parseFeed',
        data: JSON.stringify({url: feedUrl}),
        contentType:"application/json",
        success: function (result, status){
 
-                 var container = $('.feed'),
-                     title = $('.header-title'),
-                     entries = result.feed.entries,
-                     entriesLen = entries.length,
-                     entryTemplate = Handlebars.compile($('.tpl-entry').html());
+         var container = $('.feed'),
+         title = $('.header-title'),
+         entries = result.feed.entries;
+
+         /*
+          *检查返回结果是否包含预期的feed数据  
+         */
+         let entriesLen;
+         if(entries==undefined){
+            entriesLen=0;
+        }
+        else
+        {
+            entriesLen = entries.length;
+        }
+        if(entriesLen==0)
+        {
+            alert('there’s nothing to show!');
+
+        }
+        else{
+
+
+         let entryTemplate = Handlebars.compile($('.tpl-entry').html());
 
                  title.html(feedName);   // Set the header text
                  container.empty();      // Empty out all previous entries
@@ -65,39 +89,41 @@ function init() {
                   * entryTemplate (created above using Handlebars) and append
                   * the resulting HTML to the list of entries on the page.
                   */
-                 entries.forEach(function(entry) {
+                  entries.forEach(function(entry) {
                      container.append(entryTemplate(entry));
                  });
-
-                 if (cb) {
-                     cb();
-                 }
-               },
-       error: function (result, status, err){
+              } 
+              if (cb) {
+                 cb();
+             }
+         },
+         error: function (result, status, err){
                  //run only the callback without attempting to parse result due to error
+                console.log(status);
+                console.log(err);
                  if (cb) {
                      cb();
                  }
-               },
-       dataType: "json"
-     });
- }
+             },
+             dataType: "json"
+         });
+}
 
 /* Google API: Loads the Feed Reader API and defines what function
  * to call when the Feed Reader API is done loading.
  */
-google.setOnLoadCallback(init);
+ google.setOnLoadCallback(init);
 
 /* All of this functionality is heavily reliant upon the DOM, so we
  * place our code in the $() function to ensure it doesn't execute
  * until the DOM is ready.
  */
-$(function() {
+ $(function() {
     var container = $('.feed'),
-        feedList = $('.feed-list'),
-        feedItemTemplate = Handlebars.compile($('.tpl-feed-list-item').html()),
-        feedId = 0,
-        menuIcon = $('.menu-icon-link');
+    feedList = $('.feed-list'),
+    feedItemTemplate = Handlebars.compile($('.tpl-feed-list-item').html()),
+    feedId = 0,
+    menuIcon = $('.menu-icon-link');
 
     /* Loop through all of our feeds, assigning an id property to
      * each of the feeds based upon its index within the array.
@@ -105,7 +131,7 @@ $(function() {
      * above using Handlebars) and append it to the list of all
      * available feeds within the menu.
      */
-    allFeeds.forEach(function(feed) {
+     allFeeds.forEach(function(feed) {
         feed.id = feedId;
         feedList.append(feedItemTemplate(feed));
 
@@ -116,7 +142,7 @@ $(function() {
      * the menu, load the feed, and prevent the default action
      * (following the link) from occurring.
      */
-    feedList.on('click', 'a', function() {
+     feedList.on('click', 'a', function() {
         var item = $(this);
 
         $('body').addClass('menu-hidden');
@@ -127,7 +153,7 @@ $(function() {
     /* When the menu icon is clicked on, we need to toggle a class
      * on the body to perform the hiding/showing of our menu.
      */
-    menuIcon.on('click', function() {
+     menuIcon.on('click', function() {
         $('body').toggleClass('menu-hidden');
     });
-}());
+ }());
